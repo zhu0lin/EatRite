@@ -1,0 +1,3 @@
+"""EatRite FastAPI Backend."""
+
+
