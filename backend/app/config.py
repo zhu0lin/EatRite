@@ -2,6 +2,8 @@
 
 from pydantic_settings import BaseSettings
 from pydantic import Field
+from typing import Optional
+from supabase import create_client, Client
 
 
 class Settings(BaseSettings):
@@ -20,6 +22,20 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     
+    # Supabase Configuration
+    supabase_url: str = Field(
+        default="",
+        description="Supabase project URL"
+    )
+    supabase_anon_key: str = Field(
+        default="",
+        description="Supabase anonymous/public key"
+    )
+    supabase_service_role_key: str = Field(
+        default="",
+        description="Supabase service role key (for admin operations)"
+    )
+    
     # CORS
     cors_origins: list[str] = [
         "http://localhost:8081",  # Expo default
@@ -33,5 +49,20 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+# Initialize Supabase client
+def get_supabase_client() -> Optional[Client]:
+    """Get Supabase client instance."""
+    if settings.supabase_url and settings.supabase_anon_key:
+        return create_client(settings.supabase_url, settings.supabase_anon_key)
+    return None
+
+
+def get_supabase_admin_client() -> Optional[Client]:
+    """Get Supabase admin client with service role key."""
+    if settings.supabase_url and settings.supabase_service_role_key:
+        return create_client(settings.supabase_url, settings.supabase_service_role_key)
+    return None
 
 

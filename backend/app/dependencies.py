@@ -1,6 +1,7 @@
 """Shared dependencies for FastAPI endpoints."""
 
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -31,10 +32,16 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> dic
             settings.secret_key,
             algorithms=[settings.algorithm]
         )
-        username: str = payload.get("sub")
-        if username is None:
+        user_id: str = payload.get("sub")
+        email: str = payload.get("email")
+        
+        if user_id is None:
             raise credentials_exception
-        return {"username": username}
+            
+        return {
+            "user_id": user_id,
+            "email": email
+        }
     except JWTError:
         raise credentials_exception
 
@@ -49,5 +56,14 @@ async def get_current_active_user(
     """
     # Add additional checks here (e.g., user.disabled)
     return current_user
+
+
+def get_user_id_from_token(current_user: Annotated[dict, Depends(get_current_user)]) -> str:
+    """
+    Extract user ID from the current user token.
+    
+    Convenience dependency for endpoints that only need the user ID.
+    """
+    return current_user["user_id"]
 
 
